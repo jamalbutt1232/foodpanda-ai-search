@@ -1,31 +1,25 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useRef, type ReactNode } from "react";
-import { Hamburger, Pizza, Salad, Soup } from "lucide-react";
+import { useRef, useState, type ReactNode } from "react";
+import { PromoBanner } from "@/components/browse/PromoBanner";
 import { CompareView } from "@/components/results/CompareView";
 import { ResultsList } from "@/components/results/ResultsList";
-import { AreaSelector } from "@/components/search/AreaSelector";
 import { ExampleChips } from "@/components/search/ExampleChips";
 import { ModeToggle } from "@/components/search/ModeToggle";
 import { SearchBar } from "@/components/search/SearchBar";
 import { useSearch } from "@/components/search/useSearch";
+import { EXAMPLE_QUERIES } from "@/lib/examples";
 import type { AreaDTO } from "@/types/restaurant";
 
 type SearchExperienceProps = {
-  areas: AreaDTO[];
   area: AreaDTO;
   restaurantCount: number;
-  /** Browse content (deals, restaurants) shown when there is no query. */
+  /** Browse content (cuisines, deals, restaurants) shown when there is no query. */
   children: ReactNode;
 };
 
-export function SearchExperience({
-  areas,
-  area,
-  restaurantCount,
-  children,
-}: SearchExperienceProps) {
+export function SearchExperience({ area, restaurantCount, children }: SearchExperienceProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -34,7 +28,9 @@ export function SearchExperience({
   const compare = searchParams.get("compare") === "1";
   const hasQuery = query.length >= 3;
 
-  const ai = useSearch(query, area.slug, "ai", hasQuery);
+  const [attempt, setAttempt] = useState(0);
+  const retry = () => setAttempt((n) => n + 1);
+  const ai = useSearch(query, area.slug, "ai", hasQuery, attempt);
   const keyword = useSearch(query, area.slug, "keyword", hasQuery && compare);
 
   function navigate(update: Record<string, string | null>, scrollToResults = false) {
@@ -45,7 +41,6 @@ export function SearchExperience({
       else params.set(key, value);
     }
     router.push(`/?${params.toString()}`, { scroll: false });
-    // On phones the hero fills the screen; bring the results into view.
     if (scrollToResults && window.innerWidth < 768) {
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
     }
@@ -53,38 +48,29 @@ export function SearchExperience({
 
   return (
     <div className="space-y-8">
-      <section className="relative overflow-hidden rounded-3xl bg-brand px-4 py-7 text-white sm:px-10 sm:py-10">
-        <div aria-hidden className="pointer-events-none absolute inset-0 text-white/10">
-          <Hamburger className="absolute top-4 right-4 size-20 rotate-12 sm:right-14 sm:size-32" />
-          <Pizza className="absolute right-44 -bottom-6 hidden size-28 -rotate-12 lg:block" />
-          <Salad className="absolute top-8 right-80 hidden size-20 rotate-6 xl:block" />
-          <Soup className="absolute -bottom-4 left-1/2 size-16 -rotate-6" />
-        </div>
-        <div className="relative max-w-3xl space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm font-medium text-white/85">
-              {restaurantCount} restaurants delivering in {area.name}
-            </p>
-            <AreaSelector areas={areas} value={area.slug} />
-          </div>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+      <section id="search" className="scroll-mt-24 space-y-4">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
             Hungry? Just say what you&apos;re craving.
           </h1>
-          <SearchBar
-            initialQuery={query}
-            isSearching={ai.status === "loading"}
-            onSearch={(q) => navigate({ q }, true)}
-            onClear={() => navigate({ q: null })}
-          />
-          <ExampleChips activeQuery={query} onPick={(q) => navigate({ q }, true)} />
+          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+            {restaurantCount} restaurants delivering to {area.name} right now
+          </p>
         </div>
+        <SearchBar
+          initialQuery={query}
+          isSearching={ai.status === "loading"}
+          onSearch={(q) => navigate({ q }, true)}
+          onClear={() => navigate({ q: null })}
+        />
+        <ExampleChips activeQuery={query} onPick={(q) => navigate({ q }, true)} />
       </section>
 
-      <div ref={resultsRef} className="scroll-mt-20">
+      <div ref={resultsRef} className="scroll-mt-24">
         {hasQuery ? (
           <section aria-label="Search results" className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-xl font-semibold tracking-tight">
+              <h2 className="text-xl font-extrabold tracking-tight">
                 Results for <span className="text-brand">&ldquo;{query}&rdquo;</span>
               </h2>
               <ModeToggle
@@ -93,13 +79,28 @@ export function SearchExperience({
               />
             </div>
             {compare ? (
-              <CompareView keyword={keyword} ai={ai} restaurantCount={restaurantCount} />
+              <CompareView
+                keyword={keyword}
+                ai={ai}
+                restaurantCount={restaurantCount}
+                onRetry={retry}
+              />
             ) : (
-              <ResultsList state={ai} variant="ai" restaurantCount={restaurantCount} />
+              <ResultsList
+                state={ai}
+                variant="ai"
+                restaurantCount={restaurantCount}
+                onRetry={retry}
+              />
             )}
           </section>
         ) : (
-          children
+          <div className="space-y-10">
+            <PromoBanner
+              onTry={() => navigate({ q: EXAMPLE_QUERIES[0].query, compare: "1" }, true)}
+            />
+            {children}
+          </div>
         )}
       </div>
     </div>

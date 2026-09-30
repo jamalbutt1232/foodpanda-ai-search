@@ -58,12 +58,12 @@ export default async function RestaurantPage({ params }: RestaurantPageProps) {
       <CategoryNav sections={navSections} />
 
       {deals.length > 0 && (
-        <section id="deals" aria-labelledby="deals-title" className="scroll-mt-20">
-          <h2 id="deals-title" className="mb-3 text-lg font-semibold">
+        <section id="deals" aria-labelledby="deals-title" className="scroll-mt-32">
+          <h2 id="deals-title" className="mb-3 text-xl font-extrabold tracking-tight">
             Deals{" "}
             <span className="text-sm font-normal text-muted-foreground">({deals.length})</span>
           </h2>
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {deals.map((deal) => (
               <li key={deal.id}>
                 <DealCard deal={deal} />

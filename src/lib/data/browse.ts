@@ -40,9 +40,13 @@ export async function getAreaBrowse(areaSlug: string | undefined): Promise<AreaB
       item,
     ]);
   }
+  const itemsById = new Map(items.map((item) => [item._id, item]));
   const dealCounts = new Map<string, number>();
+  const bestSavings = new Map<string, number>();
   for (const deal of deals) {
     dealCounts.set(deal.restaurantId, (dealCounts.get(deal.restaurantId) ?? 0) + 1);
+    const { savings } = toDealDTO(deal, itemsById);
+    bestSavings.set(deal.restaurantId, Math.max(bestSavings.get(deal.restaurantId) ?? 0, savings));
   }
 
   const summaries: RestaurantSummaryDTO[] = restaurants.map((restaurant) => {
@@ -53,6 +57,8 @@ export async function getAreaBrowse(areaSlug: string | undefined): Promise<AreaB
       ...toRestaurantDTO(restaurant, area),
       availableItemCount: available.length,
       dealCount: dealCounts.get(restaurant._id) ?? 0,
+      maxDealSavings: bestSavings.get(restaurant._id) ?? 0,
+      categories,
       startingPrice: meals.length > 0 ? Math.min(...meals.map((i) => i.price)) : null,
       highlights: categories
         .map(categoryLabel)
@@ -63,7 +69,6 @@ export async function getAreaBrowse(areaSlug: string | undefined): Promise<AreaB
   // Open first, then best rated.
   summaries.sort((a, b) => Number(b.isOpen) - Number(a.isOpen) || b.rating - a.rating);
 
-  const itemsById = new Map(items.map((item) => [item._id, item]));
   const restaurantById = new Map(restaurants.map((r) => [r._id, r]));
   const topDeals: AreaDealDTO[] = deals
     .flatMap((deal) => {

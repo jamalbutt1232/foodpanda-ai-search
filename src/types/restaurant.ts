@@ -69,6 +69,10 @@ export interface RestaurantDetailDTO extends RestaurantDTO {
 export interface RestaurantSummaryDTO extends RestaurantDTO {
   availableItemCount: number;
   dealCount: number;
+  /** Biggest saving any one deal gives vs. menu prices (computed in code). */
+  maxDealSavings: number;
+  /** Menu categories with available dishes, e.g. ["burger", "fries"]. */
+  categories: string[];
   /** Cheapest available non-drink item, if any. */
   startingPrice: number | null;
   /** Up to 3 category labels, e.g. ["Burgers", "Fries", "Desserts"]. */

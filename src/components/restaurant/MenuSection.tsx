@@ -9,11 +9,12 @@ type MenuSectionProps = {
 
 export function MenuSection({ id, title, items }: MenuSectionProps) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-20">
-      <h2 id={`${id}-title`} className="mb-3 text-lg font-semibold">
-        {title} <span className="text-sm font-normal text-muted-foreground">({items.length})</span>
+    <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-32">
+      <h2 id={`${id}-title`} className="mb-3 text-xl font-extrabold tracking-tight">
+        {title}{" "}
+        <span className="text-sm font-semibold text-muted-foreground">({items.length})</span>
       </h2>
-      <ul className="grid gap-3 md:grid-cols-2">
+      <ul className="grid gap-4 md:grid-cols-2">
         {items.map((item) => (
           <MenuItemRow key={item.id} item={item} />
         ))}

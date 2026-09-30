@@ -1,4 +1,4 @@
-import { Zap } from "lucide-react";
+import { RotateCw, Zap } from "lucide-react";
 import { ComboCard } from "@/components/results/ComboCard";
 import { EmptyState } from "@/components/results/EmptyState";
 import { FallbackNotice } from "@/components/results/FallbackNotice";
@@ -15,7 +15,22 @@ type ResultsListProps = {
   /** Single column inside the compare view. */
   narrow?: boolean;
   restaurantCount: number;
+  onRetry?: () => void;
 };
+
+function RetryButton({ onRetry }: { onRetry?: () => void }) {
+  if (!onRetry) return null;
+  return (
+    <button
+      type="button"
+      onClick={onRetry}
+      className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm font-bold text-white hover:bg-brand-strong"
+    >
+      <RotateCw className="size-4" aria-hidden />
+      Try again
+    </button>
+  );
+}
 
 function Meta({ data }: { data: SearchResponse }) {
   const count = data.items?.length ?? data.combos?.length ?? 0;
@@ -57,6 +72,28 @@ function KeywordResults({ data }: { data: SearchResponse }) {
   );
 }
 
+function FallbackResults({ data, onRetry }: { data: SearchResponse; onRetry?: () => void }) {
+  const items = data.items ?? [];
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col items-start gap-3 rounded-2xl bg-amber-50 p-4 text-amber-950 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="font-bold">Our AI is busy right now</p>
+          <p className="text-sm">
+            {items.length > 0
+              ? "Showing keyword results instead. Try again in a moment for AI results."
+              : "Keyword search found nothing for this. Try again in a moment."}
+          </p>
+        </div>
+        <RetryButton onRetry={onRetry} />
+      </div>
+      {items.map((result) => (
+        <ItemCard key={result.item.id} result={result} compact />
+      ))}
+    </div>
+  );
+}
+
 function AiResults({ data, narrow }: { data: SearchResponse; narrow: boolean }) {
   const grid = cn(
     "grid gap-3",
@@ -73,10 +110,7 @@ function AiResults({ data, narrow }: { data: SearchResponse; narrow: boolean }) 
         <Meta data={data} />
         {data.constraints && <UnderstoodChips constraints={data.constraints} />}
       </div>
-      {data.fallbackUsed && (
-        <FallbackNotice message={data.notice ?? "AI unavailable, showing keyword results"} />
-      )}
-      {!data.fallbackUsed && data.notice && <FallbackNotice tone="info" message={data.notice} />}
+      {data.notice && <FallbackNotice tone="info" message={data.notice} />}
 
       {empty && !data.notice && (
         <EmptyState title="Nothing matched" message="Try another area or a looser request." />
@@ -90,12 +124,7 @@ function AiResults({ data, narrow }: { data: SearchResponse; narrow: boolean }) 
       ) : (
         <div className={grid}>
           {items.map((result, i) => (
-            <ItemCard
-              key={result.item.id}
-              result={result}
-              rank={data.fallbackUsed ? undefined : i + 1}
-              compact={data.fallbackUsed}
-            />
+            <ItemCard key={result.item.id} result={result} rank={i + 1} />
           ))}
         </div>
       )}
@@ -103,7 +132,13 @@ function AiResults({ data, narrow }: { data: SearchResponse; narrow: boolean }) 
   );
 }
 
-export function ResultsList({ state, variant, narrow = false, restaurantCount }: ResultsListProps) {
+export function ResultsList({
+  state,
+  variant,
+  narrow = false,
+  restaurantCount,
+  onRetry,
+}: ResultsListProps) {
   if (state.status === "idle") return null;
   if (state.status === "loading") {
     return (
@@ -117,7 +152,15 @@ export function ResultsList({ state, variant, narrow = false, restaurantCount }:
     );
   }
   if (state.status === "error") {
-    return <FallbackNotice message={state.message} />;
+    return (
+      <div className="flex flex-col items-start gap-3">
+        <FallbackNotice message={state.message} />
+        <RetryButton onRetry={onRetry} />
+      </div>
+    );
+  }
+  if (variant === "ai" && state.data.fallbackUsed) {
+    return <FallbackResults data={state.data} onRetry={onRetry} />;
   }
   return variant === "keyword" ? (
     <KeywordResults data={state.data} />

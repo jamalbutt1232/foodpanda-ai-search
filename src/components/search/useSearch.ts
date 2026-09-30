@@ -28,6 +28,8 @@ export function useSearch(
   areaSlug: string,
   mode: SearchRequestMode,
   enabled = true,
+  /** Bump to run the same search again (e.g. "Try again" after an AI outage). */
+  attempt = 0,
 ): SearchState {
   const [state, setState] = useState<SearchState>({ status: "idle" });
 
@@ -59,7 +61,7 @@ export function useSearch(
       });
 
     return () => controller.abort();
-  }, [query, areaSlug, mode, enabled]);
+  }, [query, areaSlug, mode, enabled, attempt]);
 
   return state;
 }

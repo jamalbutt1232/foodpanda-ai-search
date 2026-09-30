@@ -12,9 +12,10 @@ type ExampleChipsProps = {
 export function ExampleChips({ activeQuery, onPick }: ExampleChipsProps) {
   return (
     <div
-      className="-mx-4 flex [scrollbar-width:none] gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0"
+      className="-mx-4 flex [scrollbar-width:none] items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0"
       aria-label="Example searches"
     >
+      <span className="shrink-0 text-sm font-bold text-muted-foreground">Try asking:</span>
       {EXAMPLE_QUERIES.map((example) => {
         const active = example.query.toLowerCase() === activeQuery.trim().toLowerCase();
         return (
@@ -24,10 +25,10 @@ export function ExampleChips({ activeQuery, onPick }: ExampleChipsProps) {
             onClick={() => onPick(example.query)}
             aria-pressed={active}
             className={cn(
-              "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm whitespace-nowrap transition-colors",
+              "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold whitespace-nowrap transition-colors",
               active
-                ? "bg-white font-medium text-brand shadow-sm"
-                : "bg-white/15 text-white ring-1 ring-white/25 hover:bg-white/25",
+                ? "bg-brand text-white shadow-sm"
+                : "bg-white text-brand ring-1 ring-brand/30 hover:bg-brand-soft",
             )}
           >
             <Sparkles className="size-3.5" aria-hidden />
