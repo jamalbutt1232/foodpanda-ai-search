@@ -14,6 +14,9 @@ dishes, or complete meal combos for groups, each with a short reason based on re
 > All restaurant data is mock data from `data/foodpanda-ai-seed-data.json`.
 > Not affiliated with or endorsed by Foodpanda.
 
+> Want to rebuild the search engine yourself? See [docs/BUILD_PROMPTS.md](docs/BUILD_PROMPTS.md):
+> step-by-step prompts for an AI coding assistant.
+
 ## Stack
 
 Next.js 15 (App Router) · TypeScript (strict) · Tailwind CSS v4 + shadcn/ui · MongoDB + Mongoose ·
